@@ -8,6 +8,12 @@ class ArticlesController < ApplicationController
     render json: @articles
   end
 
+  def search
+    @articles = Article.search(params[:keyword])
+    
+    render json: @articles
+  end
+
   # GET /articles/1
   def show
     render json: @article
