@@ -3,15 +3,20 @@ class ArticlesController < ApplicationController
 
   # GET /articles
   def index
-    @articles = Article.all
-
-    render json: @articles
-  end
-
-  def search
-    @articles = Article.search(params[:keyword])
-    
-    render json: @articles
+    @res = {}
+    if params[:keyword].nil? or params[:keyword].empty?
+      page = params[:page] ||= 1
+      articles = Article.all.page(page)
+      total = Article.count
+      @res = {articles: articles, total: total}
+    else
+      page = params[:page] ||= 1
+      articles = Article.search(params[:keyword])
+      total = articles.size
+      articles_page = articles.page(page)
+      @res = {articles: articles_page, total: total}
+    end
+    render json: @res
   end
 
   # GET /articles/1
