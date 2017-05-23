@@ -3,19 +3,23 @@ class ArticlesController < ApplicationController
 
   # GET /articles
   def index
-    @res = {}
-    if params[:keyword].nil? or params[:keyword].empty?
-      page = params[:page] ||= 1
-      articles = Article.all.page(page)
-      total = Article.count
-      @res = {articles: articles, total: total}
-    else
-      page = params[:page] ||= 1
-      articles = Article.search(params[:keyword])
-      total = articles.size
-      articles_page = articles.page(page)
-      @res = {articles: articles_page, total: total}
-    end
+    page = params[:page].to_i ||= 1
+    results_per_page = params[:results_per_page].to_i ||= 10
+    to_skip = (page-1) * results_per_page
+
+    @articles = Article.offset(to_skip).limit(results_per_page)
+    @total = Article.count
+    @res = { articles: @articles, total: @total }
+    render json: @res
+  end
+
+  def search
+    keyword = params[:keyword] ||= ''
+    page = params[:page].to_i ||= 1
+    results_per_page = params[:results_per_page].to_i ||= 10
+
+    @articles, @total = Article.search(keyword, page, results_per_page)
+    @res = { articles: @articles, total: @total }
     render json: @res
   end
 

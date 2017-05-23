@@ -1,18 +1,55 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
-#   Character.create(name: 'Luke', movie: movies.first)
+require 'sqlite3'
 
-abstract = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Repellendus expedita, eligendi! Impedit voluptatibus laudantium culpa. Consequuntur dolorum asperiores, eos consectetur beatae aspernatur corrupti, natus magnam eligendi quis. Adipisci, quasi assumenda.'
-url = 'https://google.com'
-
-articles = Array.new(100)
-
-100.times do |i|
-	articles[i] = {title: "Title#{i}", abstract: abstract, url: url}
+def get_elapsed_time(start_time)
+	now = Time.now
+	return now - start_time
 end
 
-Article.create(articles)
+# Constants
+QUERY_PREFIX = 'INSERT INTO articles (title, abstract, url) VALUES '
+DEFAULT_ARTICLE = {:title => '', :abstract => '', :url => ''}
+
+# Initialization.
+articles_count = 0
+query = QUERY_PREFIX.clone
+article = DEFAULT_ARTICLE.clone
+
+# Start time measuring.
+start_time = Time.now
+# Open the XML.
+file = File.open('data/enwiki-latest-abstract.xml')
+# Connect to database.
+db = SQLite3::Database.new('./db/development.sqlite3')
+db.execute('CREATE VIRTUAL TABLE articles USING fts4("title" TEXT, "url" TEXT, "abstract" TEXT, tokenize=simple)')
+# Use manual transaction for quicker processing. 
+db.execute('BEGIN;')
+file.each_line.with_index do |line, line_count|
+	 if line.start_with?("<doc>")
+		article = DEFAULT_ARTICLE.clone
+		articles_count += 1
+		if (articles_count % 100000 == 0)
+			elapsed_time = get_elapsed_time(start_time)
+			puts "Elapsed: #{elapsed_time}. #{articles_count} articles read. Line #{line_count}."
+		end
+	 elsif line.start_with?("<title>")
+	 	article[:title] = line[18..-10]
+	 elsif line.start_with?("<abstract>")
+	 	article[:abstract] = line[10..-13]
+	 elsif line.start_with?("<url>")
+	 	article[:url] = line[5..-8]
+	 elsif line.start_with?("</doc>")
+	 	query << "(\"#{article[:title]}\",\"#{article[:abstract]}\",\"#{article[:url]}\"),"
+		if (articles_count % 500 == 0)
+			query[-1] = ';'
+			db.execute(query)
+			query = QUERY_PREFIX.clone
+		end
+	end
+end
+# Execute the remaining query.
+query[-1] = ';'
+db.execute(query)
+db.execute('COMMIT;')
+
+elapsed_time = get_elapsed_time(start_time)
+puts "Elapsed: #{elapsed_time}. #{articles_count} articles read."
