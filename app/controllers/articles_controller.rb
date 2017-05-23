@@ -3,20 +3,36 @@ class ArticlesController < ApplicationController
 
   # GET /articles
   def index
-    page = params[:page].to_i ||= 1
-    results_per_page = params[:results_per_page].to_i ||= 10
+    page = params[:page].to_i
+    if params[:page].nil?
+      page = 1
+    end
+
+    results_per_page = params[:results_per_page].to_i
+    if params[:results_per_page].nil?
+      results_per_page = 10
+    end
+
     to_skip = (page-1) * results_per_page
 
     @articles = Article.offset(to_skip).limit(results_per_page)
-    @total = Article.count
+    @total = Article.count_by_sql("SELECT MAX(ROWID) from articles")
     @res = { articles: @articles, total: @total }
     render json: @res
   end
 
   def search
     keyword = params[:keyword] ||= ''
-    page = params[:page].to_i ||= 1
-    results_per_page = params[:results_per_page].to_i ||= 10
+
+    page = params[:page].to_i
+    if params[:page].nil?
+      page = 1
+    end
+
+    results_per_page = params[:results_per_page].to_i
+    if params[:results_per_page].nil?
+      results_per_page = 10
+    end
 
     @articles, @total = Article.search(keyword, page, results_per_page)
     @res = { articles: @articles, total: @total }
