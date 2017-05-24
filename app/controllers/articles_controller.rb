@@ -23,7 +23,6 @@ class ArticlesController < ApplicationController
 
   def search
     keyword = params[:keyword] ||= ''
-
     page = params[:page].to_i
     if params[:page].nil?
       page = 1

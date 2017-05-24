@@ -10,12 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170517063554) do
+ActiveRecord::Schema.define(version: 20170524020714) do
 
-  create_table "articles", force: :cascade do |t|
-    t.string "title"
-    t.string "abstract"
-    t.string "url"
+  create_table "searches", force: :cascade do |t|
+    t.string "keyword"
+    t.integer "frequency"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["keyword"], name: "index_searches_on_keyword", unique: true
   end
 
 end

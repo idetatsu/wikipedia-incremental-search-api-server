@@ -20,6 +20,7 @@ start_time = Time.now
 file = File.open('data/enwiki-latest-abstract.xml')
 # Connect to database.
 db = SQLite3::Database.new('./db/development.sqlite3')
+# Create table for articles with FTS4 indexing.
 db.execute('CREATE VIRTUAL TABLE articles USING fts4("title" TEXT, "url" TEXT, "abstract" TEXT, tokenize=simple)')
 # Use manual transaction for quicker processing. 
 db.execute('BEGIN;')

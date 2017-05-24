@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  resources :searches do
+  	collection do
+  	 	get 'latest'
+  	end
+  end
   resources :articles do
   	collection do
   		get 'search'
