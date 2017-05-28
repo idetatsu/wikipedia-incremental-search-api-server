@@ -34,7 +34,7 @@ class ArticlesController < ApplicationController
     end
 
     @articles, @total = Article.search(keyword, page, results_per_page)
-    @res = { articles: @articles, total: @total }
+    @res = { articles: @articles, keyword: keyword,  total: @total }
     render json: @res
   end
 
